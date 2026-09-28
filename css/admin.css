@@ -186,3 +186,6 @@ select.input { width: auto; max-width: 100%; }
   .page-row .toggle { order: 3; }
   .img-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+.phrase-list { display: flex; flex-direction: column; gap: 6px; }
+.phrase-row { display: flex; align-items: center; gap: 8px; }
+.phrase-no { font-family: var(--f-label); font-size: 11px; color: var(--ink-soft); width: 20px; }
