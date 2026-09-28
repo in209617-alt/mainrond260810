@@ -1,0 +1,55 @@
+# ─────────────────────────────────────────────────────────────
+# 홈페이지 자동 배포
+# main 브랜치에 파일을 올릴 때마다 GitHub Pages에 자동으로 배포됩니다.
+# Settings → Secrets and variables → Actions → Variables 에 넣은
+# SUPABASE_URL / SUPABASE_ANON_KEY 값으로 config.js 를 채워서 배포합니다.
+# ─────────────────────────────────────────────────────────────
+name: 홈페이지 배포
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Actions 탭에서 [Run workflow] 버튼으로 직접 실행 가능
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 파일 가져오기
+        uses: actions/checkout@v4
+
+      - name: 데이터베이스 연결 정보(config.js) 채우기
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+            printf 'window.SITE_CONFIG = {\n  SUPABASE_URL: "%s",\n  SUPABASE_ANON_KEY: "%s",\n};\n' "$(echo "$SUPABASE_URL" | tr -d '[:space:]"')" "$(echo "$SUPABASE_ANON_KEY" | tr -d '[:space:]"')" > config.js
+            echo "✅ Supabase 연결 정보를 넣었습니다."
+          else
+            echo "⚠️ SUPABASE_URL / SUPABASE_ANON_KEY 변수가 없어 config.js 그대로 배포합니다. (비어 있으면 데모 모드)"
+          fi
+
+      - name: Pages 설정
+        uses: actions/configure-pages@v5
+
+      - name: 올릴 파일 묶기
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: GitHub Pages에 배포
+        id: deployment
+        uses: actions/deploy-pages@v4
