@@ -184,9 +184,11 @@ export async function galleryManager(root, page, selectedId) {
       label: '여기로 이미지를 끌어다 놓거나 눌러서 여러 장 한 번에 선택하세요',
       onFiles: async (files) => {
         try {
-          let n = images.length;
+          const added = [];
           const rows = await uploadFiles(files, { folder: 'gallery', onProgress: (i, total, name) => (progress.textContent = `업로드 중 ${i}/${total} · ${name}`) });
-          for (const r of rows) await store.api.insert('gallery_images', { category_id: current.id, url: r.url, caption: '', sort_order: n++ });
+          for (const r of rows) added.push(await store.api.insert('gallery_images', { category_id: current.id, url: r.url, caption: '', sort_order: 0 }));
+          // 새로 올린 그림을 맨 앞(위)으로 → 과거 그림은 아래로
+          await store.api.reorder('gallery_images', [...added.map((x) => x.id), ...images.map((x) => x.id)]);
           progress.textContent = `${rows.length}장 올렸어요.`;
           paintImages();
         } catch (e) { progress.textContent = ''; toastError(e); }
@@ -204,7 +206,12 @@ export async function galleryManager(root, page, selectedId) {
           if (!(await confirmDialog('이 이미지를 삭제할까요? (저장소에서도 지워집니다)', { ok: '삭제', danger: true }))) return;
           try { await store.api.remove('gallery_images', im.id); await store.api.removeMediaByUrl(im.url); paintImages(); } catch (e) { toastError(e); }
         } }, '🗑')))));
-    fill(imgBox, group(`"${current.name}" 이미지 · ${images.length}장`, zone, progress, h('p', { class: 'field-help' }, '사진을 끌어서 순서를 바꿀 수 있어요. 홈페이지에서는 한 장씩 세로로 보여요.'), images.length ? grid : h('p', { class: 'muted' }, '아직 이미지가 없어요.')));
+    fill(imgBox, group(`"${current.name}" 이미지 · ${images.length}장`, zone, progress, h('div', { class: 'row wrap' },
+      h('p', { class: 'field-help', style: { flex: '1' } }, '새로 올린 그림은 맨 앞(위)에 들어가요. 사진을 끌어서 순서를 바꿀 수 있어요. 홈페이지에서는 이 순서대로 한 줄에 3장씩 보여요.'),
+      images.length > 1 && h('button', { class: 'btn btn-sm', onclick: (e) => busy(e.currentTarget, async () => {
+        const sorted = [...images].sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+        try { await store.api.reorder('gallery_images', sorted.map((x) => x.id)); toast('최근에 올린 그림이 위로 오도록 정렬했어요', 'success'); paintImages(); } catch (err) { toastError(err); }
+      }, '정렬 중…') }, '↓ 최신순 정렬 (과거 그림은 아래로)')), images.length ? grid : h('p', { class: 'muted' }, '아직 이미지가 없어요.')));
   }
 
   paintCats();
