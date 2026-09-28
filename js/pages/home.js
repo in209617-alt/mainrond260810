@@ -9,11 +9,16 @@ import { link } from '../core/router.js';
 import { musicPlayer } from '../components/music.js';
 import { editFab } from '../components/layout.js';
 
-/** D-Day 계산: 시작일 당일 = D+0, 다음날 = D+1 … (내 컴퓨터/폰의 날짜 기준 자동 계산) */
-export function ddayNumber(startISO, now = new Date()) {
+/**
+ * D-Day 계산 (내 컴퓨터/폰의 날짜 기준 자동 계산)
+ *  firstDay = 1 (기본): 시작일 당일 = D+1  → 8월 10일 시작이면 9월 28일 = D+50  (기념일 세는 방식)
+ *  firstDay = 0        : 시작일 당일 = D+0  → 9월 28일 = D+49
+ */
+export function ddayNumber(startISO, now = new Date(), firstDay = 1) {
   const start = parseLocalDate(startISO);
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return Math.round((today - start) / 86400000);
+  const diff = Math.round((today - start) / 86400000);
+  return diff >= 0 ? diff + (Number(firstDay) === 0 ? 0 : 1) : diff;
 }
 export const ddayText = (n) => (n >= 0 ? `D+${n}` : `D-${Math.abs(n)}`);
 
@@ -28,7 +33,7 @@ function ddaySection(cfg) {
   const num = h('div', { class: 'dday-num' });
   const today = h('span');
   const paint = () => {
-    num.textContent = ddayText(ddayNumber(cfg.start));
+    num.textContent = ddayText(ddayNumber(cfg.start, new Date(), cfg.firstDay ?? 1));
     today.textContent = 'TODAY ' + fmtDate(todayISO());
   };
   paint();

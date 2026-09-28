@@ -41,7 +41,7 @@ export const DEFAULT_SETTINGS = {
       { key: 'note', on: false, size: 'full' },
     ],
     hero: { image: '', caption: '대표 이미지를 관리자 페이지에서 올려주세요', label: 'FRONT PAGE' },
-    dday: { start: '2026-08-10', label: '함께한 날', note: '처음 기록을 시작한 날부터' },
+    dday: { start: '2026-08-10', firstDay: 1, label: '함께한 날', note: '처음 기록을 시작한 날부터' },
     music: { title: '오늘의 음악', artist: '관리자 페이지에서 음악 링크를 넣어주세요', url: '', cover: '' },
     duo: {
       title: '두 사람',
