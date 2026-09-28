@@ -8,6 +8,13 @@ import { onRoute, currentRoute, navigate, link } from './core/router.js';
 import { applyTheme } from './core/theme.js';
 import { renderHeader, renderFooter } from './components/layout.js';
 import { spinner, toast } from './components/ui.js';
+import { music } from './components/music.js';
+
+/** 메인 화면에 음악 구역이 켜져 있을 때만 머리글 음악 버튼을 보여줌 */
+function syncMusic() {
+  const on = store.settings.home.sections.some((s) => s.key === 'music' && s.on);
+  music.load(on ? store.settings.home.music : {});
+}
 
 const header = $('#site-header');
 const main = $('#main');
@@ -107,6 +114,7 @@ async function boot() {
     return;
   }
   applyTheme(store.settings.theme);
+  syncMusic();
   if (store.api.mode === 'demo') document.body.classList.add('is-demo');
   if (store.api.loginError) toast('로그인 실패: ' + store.api.loginError + ' (로그인 요청한 같은 브라우저에서 링크를 열어주세요)', 'error', 8000);
 
@@ -130,7 +138,10 @@ async function boot() {
   }
 
   subscribe((what) => {
-    if (what === 'settings') applyTheme(store.settings.theme);
+    if (what === 'settings') {
+      applyTheme(store.settings.theme);
+      syncMusic();
+    }
     if (what === 'settings' || what === 'pages') {
       renderHeader(header);
       renderFooter(footer);

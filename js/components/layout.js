@@ -5,6 +5,9 @@
 import { h, fmtDate, todayISO, fill } from '../core/dom.js';
 import { store } from '../core/store.js';
 import { link, pagePath, currentRoute } from '../core/router.js';
+import { musicToggleButton } from './music.js';
+
+let musicBtnCleanup = null;
 
 export function renderHeader(root) {
   const s = store.settings.site;
@@ -25,13 +28,17 @@ export function renderHeader(root) {
     ? h('div', { class: 'head-user' }, store.canEdit && h('a', { class: 'head-link', href: link('/admin') }, '관리'), h('button', { class: 'head-link', onclick: () => store.api.signOut() }, '로그아웃'))
     : h('div', { class: 'head-user' });
 
+  musicBtnCleanup?.();
+  const musicBtn = musicToggleButton();
+  musicBtnCleanup = musicBtn._cleanup;
+
   fill(root, 
     h(
       'div',
       { class: 'masthead' },
       h('div', { class: 'mast-meta mast-left' }, h('span', null, s.masthead), h('span', { class: 'mast-date' }, fmtDate(todayISO()))),
       h('a', { class: 'mast-title', href: link('/') }, s.title),
-      h('div', { class: 'mast-meta mast-right' }, right, h('button', { class: 'nav-toggle', 'aria-controls': 'site-nav', 'aria-label': '메뉴 열기', onclick: () => root.classList.toggle('nav-open') }, h('span'), h('span'), h('span')))
+      h('div', { class: 'mast-meta mast-right' }, musicBtn, right, h('button', { class: 'nav-toggle', 'aria-controls': 'site-nav', 'aria-label': '메뉴 열기', onclick: () => root.classList.toggle('nav-open') }, h('span'), h('span'), h('span')))
     ),
     nav
   );

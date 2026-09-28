@@ -43,8 +43,66 @@ function ddaySection(cfg) {
 }
 
 function musicSection(cfg) {
-  const el = h('div', { class: 'home-card music-card dark-card' }, h('div', { class: 'card-kicker' }, h('span', null, 'NOW PLAYING'), h('span', null, 'SIDE A')), musicPlayer(cfg));
-  el._cleanup = () => el.querySelector('.music')?._stop?.();
+  const player = musicPlayer(cfg);
+  const el = h('div', { class: 'home-card music-card dark-card' }, h('div', { class: 'card-kicker' }, h('span', null, 'NOW PLAYING'), h('span', null, 'SIDE A')), player);
+  // 페이지를 옮겨도 음악은 계속 재생 (머리글 버튼으로 끌 수 있음)
+  el._cleanup = () => player._cleanup?.();
+  return el;
+}
+
+/* ───────── 두 사람은 지금 무엇을 하고 있을까? ───────── */
+function blockRandom(n) {
+  let t = (n * 2654435761) >>> 0;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+/**
+ * 지금 보여줄 문구 고르기
+ *  - 관리자가 문구를 골라뒀으면 그 문구
+ *  - 아니면 N시간(기본 3시간)마다 랜덤으로 바뀜.
+ *    시간대(0~3시, 3~6시 …)마다 정해지므로 같은 시간엔 모든 방문자가 같은 문구를 봐요.
+ */
+export function pickStatus(cfg, now = new Date()) {
+  const list = (cfg.phrases || []).map((p) => String(p).trim()).filter(Boolean);
+  const hours = Math.max(1, Number(cfg.hours) || 3);
+  const localHours = Math.floor((now.getTime() - now.getTimezoneOffset() * 60000) / 3600000);
+  const block = Math.floor(localHours / hours);
+  const start = new Date((block * hours * 3600000) + now.getTimezoneOffset() * 60000);
+  const end = new Date(start.getTime() + hours * 3600000);
+  if (!list.length) return { text: '', start, end, pinned: false };
+  if (cfg.pinned && list.includes(cfg.pinned.trim())) return { text: cfg.pinned.trim(), start, end, pinned: true };
+  const idx = (b) => Math.floor(blockRandom(b) * list.length);
+  let i = idx(block);
+  if (list.length > 1 && i === idx(block - 1)) i = (i + 1) % list.length; // 연속으로 같은 문구 방지
+  return { text: list[i], start, end, pinned: false };
+}
+
+function nowSection(cfg) {
+  const hhmm = (d) => `${String(d.getHours()).padStart(2, '0')}:00`;
+  const bubble = h('p', { class: 'now-text' });
+  const when = h('span');
+  const sds = [cfg.sd1, cfg.sd2].filter(Boolean);
+  let last = '';
+  const paint = () => {
+    const st = pickStatus(cfg);
+    when.textContent = st.pinned ? 'TODAY' : `${hhmm(st.start)} – ${hhmm(st.end)}`;
+    if (st.text === last) return;
+    last = st.text;
+    bubble.textContent = st.text || '관리자 페이지 → 메인 화면에서 문구를 적어주세요.';
+    bubble.classList.remove('pop');
+    void bubble.offsetWidth;
+    bubble.classList.add('pop');
+  };
+  paint();
+  const timer = setInterval(paint, 60 * 1000); // 시간이 바뀌면 자동으로 새 문구
+  const el = h('section', { class: 'home-card now-card' },
+    h('div', { class: 'card-kicker' }, h('span', null, 'NOW · STATUS REPORT'), when),
+    h('h2', { class: 'now-title' }, cfg.title || '두 사람은 지금 무엇을 하고 있을까?'),
+    h('div', { class: 'now-body' },
+      h('div', { class: ['now-sd', sds.length > 1 && 'two'] }, sds.length ? sds.map((u) => img(u, { alt: '' })) : img('', { emptyLabel: 'SD' })),
+      h('div', { class: 'now-bubble' }, bubble)));
+  el._cleanup = () => clearInterval(timer);
   return el;
 }
 
@@ -88,7 +146,7 @@ function noteSection(cfg) {
   return h('section', { class: 'home-card note paper-card' }, h('div', { class: 'card-kicker' }, h('span', null, cfg.title || '')), h('div', { class: 'note-text' }, richText(cfg.text)));
 }
 
-const SECTIONS = { hero: heroSection, dday: ddaySection, music: musicSection, duo: duoSection, stage: stageSection, note: noteSection };
+const SECTIONS = { hero: heroSection, dday: ddaySection, music: musicSection, duo: duoSection, now: nowSection, stage: stageSection, note: noteSection };
 
 export async function render(root) {
   const home = store.settings.home;

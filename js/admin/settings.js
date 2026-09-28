@@ -122,7 +122,7 @@ export function imageList(label, list, onChange, { raw = false, defaults, pixel 
 }
 
 /* ───────── 메인 화면 ───────── */
-const SECTION_NAMES = { hero: '대표 이미지', dday: 'D-Day', music: '음악', duo: '두 캐릭터 소개', stage: '캐릭터 이동 공간', note: '편집자의 말' };
+const SECTION_NAMES = { hero: '대표 이미지', dday: 'D-Day', music: '음악', duo: '두 캐릭터 소개', now: '두 사람은 지금…', stage: '캐릭터 이동 공간', note: '편집자의 말' };
 const SIZES = [['full', '가로 전체'], ['l', '넓게 (2/3)'], ['m', '절반'], ['s', '좁게 (1/3)']];
 
 export function renderHomeSettings(root) {
@@ -153,6 +153,7 @@ export function renderHomeSettings(root) {
     const duo = home.duo;
     const st = home.stage;
     const note = home.note;
+    const now = home.now;
 
     return [
       group('구역 배치', h('p', { class: 'field-help' }, '☑ 표시한 구역만 메인에 나와요. 크기: 넓게(2/3) 옆에 좁게(1/3) 구역 두 개가 나란히 들어갑니다.'), list),
@@ -202,6 +203,7 @@ export function renderHomeSettings(root) {
           imageList('떨어지는 나뭇잎', st.leaves, bind(st, 'leaves', changed), { raw: true, pixel: true, defaults: DEFAULT_SETTINGS.home.stage.leaves }),
           imageField('그림자', st.shadow, bind(st, 'shadow', changed), { folder: 'stage', raw: true, small: true }),
           imageField('하트 이미지 (비우면 기본 도트 하트)', st.heart, bind(st, 'heart', changed), { folder: 'stage', raw: true, small: true }))),
+      nowGroup(now, changed),
       group('편집자의 말',
         field('제목', textInput(note.title, bind(note, 'title', changed))),
         field('내용', textArea(note.text, bind(note, 'text', changed), { rows: 5 }))),
@@ -213,4 +215,32 @@ export function renderHomeSettings(root) {
       } }, '캐릭터 공간 기본값 복원')),
     ];
   });
+}
+
+/* 메인 화면 → "두 사람은 지금 무엇을 하고 있을까?" 설정 */
+function nowGroup(now, changed) {
+  const listBox = h('div', { class: 'phrase-list' });
+  const pinnedBox = h('div');
+  const paintPinned = () => {
+    const opts = [['', `🎲 랜덤 (${now.hours || 3}시간마다 자동으로 바뀜)`], ...now.phrases.filter((p) => p.trim()).map((p) => [p, '📌 ' + p])];
+    if (now.pinned && !now.phrases.includes(now.pinned)) now.pinned = '';
+    fill(pinnedBox, field('지금 띄울 문구', selectInput(opts, now.pinned || '', (v) => { now.pinned = v; changed(); }), '문구를 고르면 그 문구만 계속 보여요. 고르지 않으면 목록에서 랜덤으로 나옵니다.'));
+  };
+  const paintList = () => {
+    fill(listBox, ...now.phrases.map((p, i) => h('div', { class: 'phrase-row' },
+      h('span', { class: 'phrase-no' }, String(i + 1).padStart(2, '0')),
+      h('input', { class: 'input', value: p, placeholder: '예) 둘은 같이 산책하고 있어요.', oninput: (e) => { now.phrases[i] = e.target.value; changed(); }, onchange: paintPinned }),
+      h('button', { type: 'button', class: 'btn-icon danger', title: '문구 삭제', onclick: () => { now.phrases.splice(i, 1); changed(); paintList(); paintPinned(); } }, '✕'))));
+  };
+  paintList();
+  paintPinned();
+  return group('두 사람은 지금 무엇을 하고 있을까?',
+    field('제목', textInput(now.title, bind(now, 'title', changed))),
+    h('div', { class: 'two-col' },
+      imageField('SD 이미지 1', now.sd1, bind(now, 'sd1', changed), { folder: 'home', small: true, raw: true }),
+      imageField('SD 이미지 2 (선택)', now.sd2, bind(now, 'sd2', changed), { folder: 'home', small: true, raw: true, help: '둘이 함께 있는 그림 한 장이면 1번만 넣어도 돼요.' })),
+    h('div', { class: 'field' }, h('span', { class: 'field-label' }, `문구 목록 (${now.phrases.length}개)`), listBox,
+      h('div', { class: 'row' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: () => { now.phrases.push(''); changed(); paintList(); listBox.querySelector('.phrase-row:last-child input')?.focus(); } }, '+ 문구 추가'))),
+    pinnedBox,
+    field('랜덤 문구가 바뀌는 간격 (시간)', numberInput(now.hours, (v) => { now.hours = Math.max(1, Math.min(24, v || 3)); changed(); paintPinned(); }, { min: 1, max: 24, step: 1 }), '기본 3시간. 0~3시, 3~6시… 처럼 시간대마다 바뀌고, 같은 시간엔 모든 방문자가 같은 문구를 봐요.'));
 }

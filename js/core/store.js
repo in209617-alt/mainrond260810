@@ -48,8 +48,14 @@ export async function loadSettings() {
   store.settingsSaved = !!saved;
   store.settings = deepMerge(clone(DEFAULT_SETTINGS), saved || {});
   // 메인 화면 구역 목록에 새로 추가된 구역이 있으면 뒤에 붙여줌
-  const keys = new Set(store.settings.home.sections.map((s) => s.key));
-  DEFAULT_SETTINGS.home.sections.forEach((s) => !keys.has(s.key) && store.settings.home.sections.push({ ...s, on: false }));
+  // (이미 저장된 설정에도 새 구역이 기본 위치에 나타나도록)
+  const list = store.settings.home.sections;
+  DEFAULT_SETTINGS.home.sections.forEach((s, i) => {
+    if (list.some((x) => x.key === s.key)) return;
+    const prevKey = DEFAULT_SETTINGS.home.sections.slice(0, i).reverse().find((p) => list.some((x) => x.key === p.key))?.key;
+    const at = prevKey ? list.findIndex((x) => x.key === prevKey) + 1 : 0;
+    list.splice(at, 0, { ...s });
+  });
   notify('settings');
 }
 
