@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
 // gallery.js — 갤러리 페이지
-// 카테고리(로그/커미션 등)를 누르면 해당 그림들이 한 장씩 세로로 쭉 이어집니다.
+// 카테고리(로그/커미션 등)를 누르면 해당 그림들이 한 줄에 3장씩 정사각형으로 보여요.
 // 카테고리 이름·순서·추가·삭제는 모두 관리자 페이지에서 합니다.
 // ─────────────────────────────────────────────────────────────
 import { h, img, reveal, safeUrl, append, fill } from '../core/dom.js';
@@ -16,12 +16,12 @@ export async function render(root, page, route) {
   const tabs = h('nav', { class: 'index-tabs', 'aria-label': '갤러리 분류' },
     cats.map((c) => h('a', { class: ['index-tab', c.id === current?.id && 'active'], href: link(`${pagePath(page)}?c=${c.id}`) }, c.name)));
 
-  const feed = h('div', { class: 'feed' },
+  // 한 줄에 3장씩, 정사각형 격자 (누르면 원본 비율로 크게 보기)
+  const feed = h('div', { class: 'grid3' },
     images.map((im, i) =>
-      reveal(h('figure', { class: 'feed-item' },
-        h('div', { class: 'feed-meta' }, h('span', null, `No. ${String(i + 1).padStart(3, '0')}`), h('span', null, current.name)),
-        h('button', { class: 'feed-img', onclick: () => lightbox(images, i), 'aria-label': '크게 보기' }, img(im.url, { alt: im.caption || '' })),
-        im.caption && h('figcaption', { class: 'feed-caption' }, im.caption)))));
+      h('button', { class: 'grid3-item', style: { '--d': `${(i % 9) * 40}ms` }, onclick: () => lightbox(images, i), 'aria-label': (im.caption || `${i + 1}번째 이미지`) + ' 크게 보기' },
+        img(im.url, { alt: im.caption || '' }),
+        im.caption && h('span', { class: 'grid3-cap' }, im.caption))));
 
   append(root, h('section', { class: 'wrap gallery-page' },
     pageHeader(page, { kicker: `GALLERY · ${images.length} PRINTS` }),
