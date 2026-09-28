@@ -273,6 +273,8 @@
 .login-card { text-align: left; }
 .login-card .page-title { font-size: 40px; }
 .login-card form { margin-top: 18px; }
+.pw-box { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line-ink); }
+.pw-box summary { cursor: pointer; font-family: var(--f-label); font-size: 13px; margin-bottom: 8px; }
 .code-box { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line-ink); }
 
 /* ───────── 반응형 (태블릿·휴대폰) ───────── */

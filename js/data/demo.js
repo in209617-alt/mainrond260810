@@ -135,6 +135,9 @@ export function createDemoBackend() {
       return { instant: true };
     },
     async verifyCode() {},
+    async signInWithPassword(email) {
+      return api.sendLoginEmail(email);
+    },
     async signOut() {
       db.user = null;
       save();

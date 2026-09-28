@@ -47,6 +47,30 @@ export async function renderLogin(root) {
   h('button', { class: 'btn btn-primary', type: 'submit' }, demo ? '데모로 로그인' : '로그인 메일 받기'),
   status);
 
+  // 비밀번호 로그인 (메일 발송 한도에 걸렸을 때 등)
+  const pw = h('input', { class: 'input', type: 'password', autocomplete: 'current-password', placeholder: '비밀번호' });
+  const pwLogin = async (e) => {
+    e?.preventDefault?.();
+    const btn = pwBox.querySelector('button');
+    await busy(btn, async () => {
+      try {
+        if (!email.value.trim() || !pw.value) return toast('이메일과 비밀번호를 모두 입력해 주세요', 'error');
+        localStorage.setItem('afterLogin', '/admin');
+        await store.api.signInWithPassword(email.value.trim(), pw.value);
+        toast('로그인했어요', 'success');
+        navigate('/admin');
+      } catch (err) {
+        localStorage.removeItem('afterLogin');
+        toastError(err);
+      }
+    }, '확인 중…');
+  };
+  pw.addEventListener('keydown', (e) => e.key === 'Enter' && pwLogin(e));
+  const pwBox = demo ? null : h('details', { class: 'pw-box', open: true },
+    h('summary', null, '비밀번호로 로그인 (메일이 안 오거나 "잠시 후 다시" 오류가 날 때)'),
+    h('p', { class: 'field-help' }, '위 이메일 칸에 이메일을 적고, Supabase → Authentication → Users → Add user 에서 정한 비밀번호를 입력하세요.'),
+    h('div', { class: 'row' }, pw, h('button', { class: 'btn', type: 'button', onclick: pwLogin }, '비밀번호로 로그인')));
+
   const code = h('input', { class: 'input', inputmode: 'numeric', maxlength: 10, placeholder: '메일 속 숫자 코드' });
   codeBox.append(
     h('p', { class: 'field-help' }, '메일에 숫자 코드가 있다면 여기에 입력해도 됩니다.'),
@@ -68,7 +92,8 @@ export async function renderLogin(root) {
   append(root, h('div', { class: 'notice login-card' },
     h('div', { class: 'page-kicker' }, 'EDITOR ACCESS'),
     h('h1', { class: 'page-title' }, '편집자 로그인'),
-    h('p', { class: 'muted' }, demo ? '지금은 데모 모드예요. 아무 이메일로나 바로 로그인되고, 내용은 이 브라우저에만 저장됩니다.' : '승인된 이메일로 로그인하면 편집 권한이 생깁니다. 비밀번호는 필요 없어요.'),
+    h('p', { class: 'muted' }, demo ? '지금은 데모 모드예요. 아무 이메일로나 바로 로그인되고, 내용은 이 브라우저에만 저장됩니다.' : '승인된 이메일로 로그인하면 편집 권한이 생깁니다. 메일로 받은 링크나, 아래 비밀번호로 로그인할 수 있어요.'),
     form,
-    codeBox));
+    codeBox,
+    pwBox));
 }

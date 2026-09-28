@@ -104,6 +104,9 @@ export async function createSupabaseBackend(url, key) {
       const redirect = location.origin + location.pathname;
       must(await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect, shouldCreateUser: true } }));
     },
+    async signInWithPassword(email, password) {
+      must(await sb.auth.signInWithPassword({ email, password }));
+    },
     async verifyCode(email, token) {
       must(await sb.auth.verifyOtp({ email, token, type: 'email' }));
     },
@@ -124,7 +127,12 @@ function translateError(error) {
   const msg = error.message || String(error);
   if (/row-level security|permission denied|violates row-level/i.test(msg)) return '권한이 없습니다. 승인된 편집자 이메일로 로그인했는지 확인해 주세요.';
   if (/JWT|expired/i.test(msg)) return '로그인이 만료되었습니다. 다시 로그인해 주세요.';
-  if (/rate limit|security purposes/i.test(msg)) return '너무 자주 요청했어요. 1분 정도 뒤에 다시 시도해 주세요.';
+  if (/email rate limit/i.test(msg)) return '무료 메일 발송 한도(시간당 몇 통)를 넘었어요. 1시간쯤 뒤에 다시 시도하거나, 아래 "비밀번호로 로그인"을 사용해 주세요.';
+  { const sec = msg.match(/after (\d+) seconds?/i); if (sec) return `같은 이메일로는 ${sec[1]}초 뒤에 다시 요청할 수 있어요. 방금 받은 메일이 있다면 그 메일의 링크를 사용하세요.`; }
+  if (/rate limit|security purposes/i.test(msg)) return '너무 자주 요청했어요. 잠시 뒤에 다시 시도하거나, 아래 "비밀번호로 로그인"을 사용해 주세요.';
+  if (/Invalid login credentials/i.test(msg)) return '이메일 또는 비밀번호가 맞지 않아요.';
+  if (/Email not confirmed/i.test(msg)) return '이메일 인증이 안 된 계정이에요. Supabase에서 사용자를 만들 때 "Auto Confirm User"를 체크해 주세요.';
+  if (/Token has expired|invalid/i.test(msg) && /token|otp/i.test(msg)) return '코드가 틀렸거나 만료됐어요. 가장 최근에 받은 메일의 코드를 입력해 주세요.';
   if (/duplicate key.*slug/i.test(msg)) return '같은 주소(slug)를 쓰는 페이지가 이미 있어요. 다른 주소를 써 주세요.';
   if (/duplicate key/i.test(msg)) return '이미 같은 값이 있어요.';
   if (/Payload too large|exceeded the maximum/i.test(msg)) return '파일이 너무 큽니다 (무료 플랜: 파일당 50MB 이하).';
