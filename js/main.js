@@ -2,7 +2,7 @@
 // main.js — 홈페이지가 시작되는 곳
 // 1) 데이터베이스 연결 → 2) 설정·메뉴 불러오기 → 3) 주소에 맞는 화면 그리기
 // ─────────────────────────────────────────────────────────────
-import { h, $, fill } from './core/dom.js';
+import { h, $, fill, safeUrl } from './core/dom.js';
 import { store, subscribe, initApi, loadSettings, loadPages, refreshAuth, findPage, homePage } from './core/store.js';
 import { onRoute, currentRoute, navigate, link } from './core/router.js';
 import { applyTheme } from './core/theme.js';
@@ -11,6 +11,16 @@ import { spinner, toast } from './components/ui.js';
 import { music } from './components/music.js';
 
 /** 메인 화면에 음악 구역이 켜져 있을 때만 머리글 음악 버튼을 보여줌 */
+/** 브라우저 탭 아이콘 (관리자 페이지 → 사이트 정보에서 변경) */
+function syncFavicon() {
+  const url = safeUrl(store.settings.site.favicon) || 'assets/favicon.png';
+  const el = document.getElementById('favicon');
+  if (el && el.getAttribute('href') !== url) {
+    el.setAttribute('href', url);
+    el.removeAttribute('type');
+  }
+}
+
 function syncMusic() {
   const on = store.settings.home.sections.some((s) => s.key === 'music' && s.on);
   music.load(on ? store.settings.home.music : {});
@@ -115,6 +125,7 @@ async function boot() {
   }
   applyTheme(store.settings.theme);
   syncMusic();
+  syncFavicon();
   if (store.api.mode === 'demo') document.body.classList.add('is-demo');
   if (store.api.loginError) toast('로그인 실패: ' + store.api.loginError + ' (로그인 요청한 같은 브라우저에서 링크를 열어주세요)', 'error', 8000);
 
@@ -141,6 +152,7 @@ async function boot() {
     if (what === 'settings') {
       applyTheme(store.settings.theme);
       syncMusic();
+      syncFavicon();
     }
     if (what === 'settings' || what === 'pages') {
       renderHeader(header);

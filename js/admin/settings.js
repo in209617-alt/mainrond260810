@@ -64,7 +64,8 @@ export function renderSite(root) {
       field('사이트 제목', textInput(s.title, bind(s, 'title', changed))),
       field('사이트 설명 (메인 상단 한 줄 소개)', textArea(s.subtitle, bind(s, 'subtitle', changed), { rows: 2 })),
       field('머리글 작은 문구', textInput(s.masthead, bind(s, 'masthead', changed)), '제목 왼쪽 위에 작게 표시돼요. 예) PRIVATE ARCHIVE · VOL. 01'),
-      field('바닥글 문구', textInput(s.footer, bind(s, 'footer', changed))));
+      field('바닥글 문구', textInput(s.footer, bind(s, 'footer', changed))),
+      imageField('브라우저 탭 아이콘 (정사각형 이미지 추천)', s.favicon, bind(s, 'favicon', changed), { folder: 'design', small: true, raw: true, help: '인터넷 창 제목 옆에 작게 보이는 아이콘이에요. 비우면 기본 아이콘을 써요.' }));
   });
 }
 

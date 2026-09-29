@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS = {
     subtitle: '두 사람의 관계와 이야기, 함께한 날들을 모아두는 개인 자료실',
     masthead: 'PRIVATE ARCHIVE · VOL. 01',
     footer: '모든 기록은 조심스럽게 보관됩니다.',
+    favicon: 'assets/favicon.png', // 브라우저 탭 아이콘
   },
   theme: {
     primary: '#1c1a17', // 메인 색상 (머리글·어두운 면)
