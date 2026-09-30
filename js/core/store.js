@@ -2,7 +2,7 @@
 // store.js — 홈페이지 전체가 함께 쓰는 정보(설정·메뉴·로그인 상태)를 보관
 // ─────────────────────────────────────────────────────────────
 import { deepMerge, clone } from './dom.js';
-import { DEFAULT_SETTINGS, buildSeed } from '../data/seed.js';
+import { DEFAULT_SETTINGS, buildSeed, OLD_DEFAULT_THEME, OLD_DEFAULT_THEMES } from '../data/seed.js';
 
 const listeners = new Set();
 
@@ -47,6 +47,12 @@ export async function loadSettings() {
   const saved = await store.api.getSettings();
   store.settingsSaved = !!saved;
   store.settings = deepMerge(clone(DEFAULT_SETTINGS), saved || {});
+  // 예전 기본 디자인을 한 번도 바꾸지 않은 사이트는 새 기본 디자인(도트 데스크탑)으로 보여줌
+  const t = store.settings.theme;
+  const same = (old) => Object.entries(old).every(([k, v]) => String(t[k]).toLowerCase() === v.toLowerCase());
+  if ([OLD_DEFAULT_THEME, ...OLD_DEFAULT_THEMES].some(same)) {
+    Object.assign(t, { ...DEFAULT_SETTINGS.theme, bgImage: t.bgImage, bgOverlay: t.bgOverlay });
+  }
   // 메인 화면 구역 목록에 새로 추가된 구역이 있으면 뒤에 붙여줌
   // (이미 저장된 설정에도 새 구역이 기본 위치에 나타나도록)
   const list = store.settings.home.sections;

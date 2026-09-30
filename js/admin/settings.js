@@ -62,6 +62,7 @@ export function renderSite(root) {
     const s = d.site;
     return group('기본 정보',
       field('사이트 제목', textInput(s.title, bind(s, 'title', changed))),
+      field('메인 화면 인사말', textInput(s.welcome, bind(s, 'welcome', changed)), '메인 화면 맨 위 큰 글씨예요. 예) 어서 오세요!'),
       field('사이트 설명 (메인 상단 한 줄 소개)', textArea(s.subtitle, bind(s, 'subtitle', changed), { rows: 2 })),
       field('머리글 작은 문구', textInput(s.masthead, bind(s, 'masthead', changed)), '제목 왼쪽 위에 작게 표시돼요. 예) PRIVATE ARCHIVE · VOL. 01'),
       field('바닥글 문구', textInput(s.footer, bind(s, 'footer', changed))),
@@ -80,7 +81,7 @@ export function renderDesign(root) {
     };
     return [
       group('빠른 색 조합',
-        h('div', { class: 'preset-row' }, PRESETS.map((p) => h('button', { class: 'preset', onclick: () => { Object.assign(t, { primary: p.primary, secondary: p.secondary, accent: p.accent, background: p.background, text: p.text }); changed(); repaint(); } },
+        h('div', { class: 'preset-row' }, PRESETS.map((p) => h('button', { class: 'preset', onclick: () => { const { name, ...values } = p; Object.assign(t, values); Object.values(values).forEach((v) => typeof v === 'string' && !v.startsWith('#') && loadFont(v)); changed(); repaint(); } },
           h('span', { class: 'preset-sw' }, [p.background, p.primary, p.secondary, p.accent].map((c) => h('i', { style: { background: c } }))), p.name)))),
       group('색상',
         h('div', { class: 'color-grid' },

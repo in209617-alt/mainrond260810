@@ -8,6 +8,7 @@ import { store } from '../core/store.js';
 import { link } from '../core/router.js';
 import { musicPlayer } from '../components/music.js';
 import { editFab } from '../components/layout.js';
+import { icon } from '../components/icons.js';
 
 /**
  * D-Day 계산 (내 컴퓨터/폰의 날짜 기준 자동 계산)
@@ -151,6 +152,49 @@ function noteSection(cfg) {
   return h('section', { class: 'home-card note paper-card' }, h('div', { class: 'card-kicker' }, h('span', null, cfg.title || '')), h('div', { class: 'note-text' }, richText(cfg.text)));
 }
 
+/* ───────── 맨 위 인사 배너 (숲 풍경 + 날짜 카드) ───────── */
+const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
+function welcomeBanner(cleanups) {
+  const site = store.settings.site;
+  const st = store.settings.home.stage || {};
+  const trees = (st.trees || []).filter(Boolean);
+  const bushes = (st.smalls || []).filter(Boolean);
+  const flowers = (st.decor || []).filter(Boolean);
+  // 숲 풍경: 캐릭터 공간에 쓰는 도트 나무·덤불·꽃을 크게 배치 (관리자 페이지에서 바꾸면 같이 바뀜)
+  const spots = [
+    [flowers[0], 8, 4, 2.4], [bushes[0], 18, 0, 2.2], [flowers[2], 30, 6, 2.4], [flowers[3], 40, 2, 2.4],
+    [trees[1], 52, 0, 2], [bushes[1], 60, 0, 2.2], [trees[0], 67, 0, 2.5], [trees[3], 76, 0, 2.7], [trees[2], 86, 0, 2.3], [trees[0], 95, 0, 2],
+  ].filter(([u]) => u);
+  const scene = h('div', { class: 'welcome-scene', 'aria-hidden': 'true' },
+    h('span', { class: 'hill hill-back' }), h('span', { class: 'hill hill-front' }),
+    spots.map(([u, left, bottom, scale]) => h('img', { class: 'scene-px', src: u, alt: '', style: { left: left + '%', bottom: `calc(14% + ${bottom}px)`, '--s': scale } })));
+  const dateEl = h('span');
+  const dayEl = h('span');
+  const timeEl = h('span');
+  const tick = () => {
+    const d = new Date();
+    dateEl.textContent = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+    dayEl.textContent = WEEK[d.getDay()] + '요일';
+    timeEl.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+  tick();
+  const t = setInterval(tick, 20 * 1000);
+  cleanups.push(() => clearInterval(t));
+  return h('section', { class: 'welcome' },
+    h('div', { class: 'win-bar' },
+      h('span', { class: 'win-title' }, icon('heart'), site.title),
+      h('span', { class: 'win-btns', 'aria-hidden': 'true' }, h('i'), h('i'), h('i'))),
+    h('div', { class: 'welcome-body' },
+      scene,
+      h('div', { class: 'welcome-text' },
+        h('h1', { class: 'welcome-title' }, icon('leaf', 'welcome-leaf'), site.welcome || '어서 오세요!'),
+        h('p', { class: 'welcome-sub' }, site.subtitle))),
+    h('div', { class: 'welcome-date' },
+      h('div', null, icon('calendar'), dateEl),
+      h('div', null, icon('custom'), dayEl),
+      h('div', null, icon('clock'), timeEl)));
+}
+
 const SECTIONS = { hero: heroSection, dday: ddaySection, music: musicSection, duo: duoSection, now: nowSection, stage: stageSection, note: noteSection };
 
 export async function render(root) {
@@ -165,7 +209,7 @@ export async function render(root) {
   });
   append(root, 
     h('section', { class: 'home wrap' },
-      h('div', { class: 'home-deck' }, h('span', { class: 'rule' }), h('p', null, store.settings.site.subtitle), h('span', { class: 'rule' })),
+      welcomeBanner(cleanups),
       grid,
       editFab(link('/admin/home'), '메인 화면 편집')));
   return () => cleanups.forEach((fn) => fn());

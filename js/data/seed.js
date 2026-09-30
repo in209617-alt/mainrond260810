@@ -13,23 +13,24 @@ export const DEFAULT_SETTINGS = {
     title: '론드 보관소',
     subtitle: '두 사람의 관계와 이야기, 함께한 날들을 모아두는 개인 자료실',
     masthead: 'PRIVATE ARCHIVE · VOL. 01',
+    welcome: '어서 오세요!', // 메인 화면 맨 위 인사말
     footer: '모든 기록은 조심스럽게 보관됩니다.',
     favicon: 'assets/favicon.png', // 브라우저 탭 아이콘
   },
   theme: {
-    primary: '#1c1a17', // 메인 색상 (머리글·어두운 면)
-    secondary: '#e4dab9', // 보조 색상 (종이 색)
-    accent: '#b3362b', // 포인트 색상 (붉은 강조)
-    background: '#121110', // 배경 색상
-    text: '#2b261f', // 글자 색상 (종이 위 글자)
-    fontTitle: 'Song Myung',
-    fontBody: 'Gowun Batang',
-    fontLabel: 'Special Elite',
+    primary: '#2b3db4', // 메인 색상 (창 제목줄·메뉴)
+    secondary: '#f7eed9', // 보조 색상 (창·종이 색)
+    accent: '#e0567c', // 포인트 색상 (강조)
+    background: '#cbc3aa', // 배경 색상 (바탕화면)
+    text: '#2a2321', // 글자 색상
+    fontTitle: 'Galmuri11',
+    fontBody: 'Galmuri11',
+    fontLabel: 'Galmuri9',
     fontHand: 'Nanum Pen Script',
     bgImage: '',
     bgOverlay: 0.72,
     grid: true,
-    grain: true,
+    grain: false,
   },
   home: {
     sections: [
@@ -181,3 +182,9 @@ export const PAGE_TYPES = {
   log: { label: '로그 (블로그)', help: '날짜별 글 목록과 본문' },
   home: { label: '메인', help: '메인 화면 (하나만 존재)' },
 };
+
+/** 예전 기본 디자인(검정·빈티지) — 한 번도 바꾸지 않았다면 새 기본 디자인으로 보여주기 위해 사용 */
+export const OLD_DEFAULT_THEMES = [
+  { primary: '#5f7d45', secondary: '#fbf7ec', accent: '#6b8f45', background: '#efe8d4', text: '#4a3b28', fontTitle: 'Jua', fontBody: 'Gowun Dodum', fontLabel: 'Gowun Dodum', fontHand: 'Nanum Pen Script' },
+];
+export const OLD_DEFAULT_THEME = { primary: '#1c1a17', secondary: '#e4dab9', accent: '#b3362b', background: '#121110', text: '#2b261f', fontTitle: 'Song Myung', fontBody: 'Gowun Batang', fontLabel: 'Special Elite', fontHand: 'Nanum Pen Script' };
