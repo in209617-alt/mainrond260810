@@ -32,6 +32,15 @@ export const DEFAULT_SETTINGS = {
     grid: true,
     grain: false,
   },
+  // 마우스 커서 (홈페이지 안에서만 적용) — 이미지 2장: 기본 / 클릭할 때
+  cursor: {
+    on: true,
+    normal: 'assets/cursor/1.png', // 가만히 있을 때·움직일 때
+    click: 'assets/cursor/1.png', // 클릭(누르고 있는 동안)
+    size: 48, // 화면에 보이는 크기(px)
+    hotX: 0, // 클릭 지점: 그림 왼쪽에서 몇 %
+    hotY: 0, // 클릭 지점: 그림 위에서 몇 %
+  },
   home: {
     sections: [
       { key: 'hero', on: true, size: 'l' },

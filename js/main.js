@@ -9,6 +9,7 @@ import { applyTheme } from './core/theme.js';
 import { renderHeader, renderFooter } from './components/layout.js';
 import { spinner, toast } from './components/ui.js';
 import { music } from './components/music.js';
+import { syncCursor } from './components/cursor.js';
 
 /** 메인 화면에 음악 구역이 켜져 있을 때만 머리글 음악 버튼을 보여줌 */
 /** 브라우저 탭 아이콘 (관리자 페이지 → 사이트 정보에서 변경) */
@@ -126,6 +127,7 @@ async function boot() {
   applyTheme(store.settings.theme);
   syncMusic();
   syncFavicon();
+  syncCursor(store.settings.cursor);
   if (store.api.mode === 'demo') document.body.classList.add('is-demo');
   if (store.api.loginError) toast('로그인 실패: ' + store.api.loginError + ' (로그인 요청한 같은 브라우저에서 링크를 열어주세요)', 'error', 8000);
 
@@ -153,6 +155,7 @@ async function boot() {
       applyTheme(store.settings.theme);
       syncMusic();
       syncFavicon();
+      syncCursor(store.settings.cursor);
     }
     if (what === 'settings' || what === 'pages') {
       renderHeader(header);

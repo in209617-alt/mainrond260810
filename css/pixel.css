@@ -495,3 +495,27 @@ img { image-rendering: auto; }
 .party-hp { display: flex; align-items: center; gap: 6px; padding: 0 10px; font-family: var(--f-label); font-size: 10px; color: var(--c-accent); }
 .party-hp i { flex: 1; height: 8px; border: 2px solid var(--c-ink); background: linear-gradient(90deg, var(--c-accent) var(--hp), transparent var(--hp)); }
 @media (prefers-reduced-motion: reduce) { .party-sprite { animation: none; } }
+
+/* ───────── 꾸민 마우스 커서 (js/components/cursor.js) ───────── */
+.custom-cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  user-select: none;
+  object-fit: contain;
+  opacity: 0;
+  will-change: transform;
+  transition: opacity .12s;
+}
+.custom-cursor.on { opacity: 1; }
+.custom-cursor.down { filter: brightness(.92); }
+/* 원래 화살표 커서를 숨김 (글자 입력칸 위에서는 원래 I자 커서를 보여줌) */
+body.has-custom-cursor,
+body.has-custom-cursor * { cursor: none !important; }
+body.has-custom-cursor.cursor-text .custom-cursor { opacity: 0; }
+body.has-custom-cursor input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=button]):not([type=submit]):not([type=file]),
+body.has-custom-cursor textarea,
+body.has-custom-cursor [contenteditable="true"] { cursor: text !important; }
+body.has-custom-cursor select { cursor: default !important; }

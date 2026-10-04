@@ -9,6 +9,7 @@ import { applyTheme, FONTS, PRESETS, loadFont } from '../core/theme.js';
 import { DEFAULT_SETTINGS } from '../data/seed.js';
 import { field, textInput, textArea, toggle, colorField, imageField, selectInput, audioField, pickMedia, uploadFiles, pickFiles, numberInput } from '../components/fields.js';
 import { makeSortable } from '../components/sortable.js';
+import { syncCursor, EXAMPLE_CURSOR } from '../components/cursor.js';
 import { toast, toastError, busy, confirmDialog } from '../components/ui.js';
 
 /** 공통: 초안(draft)을 고치고 [저장]을 누르면 데이터베이스에 저장 */
@@ -96,12 +97,35 @@ export function renderDesign(root) {
         h('label', { class: 'field' }, h('span', { class: 'field-label' }, '배경 이미지 어둡게 덮기'), h('input', { type: 'range', min: 0, max: 1, step: 0.05, value: t.bgOverlay, oninput: (e) => { t.bgOverlay = Number(e.target.value); changed(); } })),
         toggle('모눈 격자 무늬', t.grid, bind(t, 'grid', changed)),
         toggle('필름 입자(노이즈) 효과', t.grain, bind(t, 'grain', changed))),
+      cursorGroup(d, changed, repaint),
       group('종이 · 장식 기본 목록',
         h('p', { class: 'field-help' }, '기록철 페이지에서 고를 수 있는 종이 배경과 장식 이미지 목록입니다.'),
         imageList('종이 배경', d.paperLibrary, (v) => { d.paperLibrary = v; changed(); }, { defaults: DEFAULT_SETTINGS.paperLibrary }),
         imageList('장식 이미지', d.decorLibrary, (v) => { d.decorLibrary = v; changed(); }, { defaults: DEFAULT_SETTINGS.decorLibrary })),
     ];
-  }, { onChange: (d) => applyTheme(d.theme), onDiscard: () => applyTheme(store.settings.theme) });
+  }, {
+    onChange: (d) => { applyTheme(d.theme); syncCursor(d.cursor); },
+    onDiscard: () => { applyTheme(store.settings.theme); syncCursor(store.settings.cursor); },
+  });
+}
+
+/** 디자인 → 마우스 커서 (이미지 2장: 기본 / 클릭할 때) */
+function cursorGroup(d, changed, repaint) {
+  d.cursor = { ...clone(DEFAULT_SETTINGS.cursor), ...(d.cursor || {}) };
+  const c = d.cursor;
+  const HOT = [['0,0', '왼쪽 위 (보통 화살표처럼)'], ['50,0', '가운데 위'], ['50,50', '정가운데'], ['0,100', '왼쪽 아래']];
+  const hotNow = `${c.hotX || 0},${c.hotY || 0}`;
+  return group('마우스 커서',
+    h('p', { class: 'field-help' }, '홈페이지 안에서만 마우스 커서가 이 그림으로 바뀌어요. (휴대폰·태블릿처럼 마우스가 없는 기기에서는 보이지 않아요.) 배경이 투명한 PNG 이미지를 추천해요. 바꾸면 이 화면에서 바로 미리 볼 수 있어요.'),
+    toggle('꾸민 마우스 커서 사용', c.on, bind(c, 'on', changed)),
+    h('div', { class: 'two-col' },
+      imageField('① 기본 커서 (가만히 있을 때)', c.normal, bind(c, 'normal', changed), { folder: 'design', small: true, raw: true }),
+      imageField('② 클릭할 때 커서', c.click, bind(c, 'click', changed), { folder: 'design', small: true, raw: true, help: '비우면 클릭할 때도 기본 커서를 보여줘요.' })),
+    field('커서 크기 (px)', numberInput(c.size, (v) => { c.size = Math.max(16, Math.min(128, v || 48)); changed(); }, { min: 16, max: 128, step: 4 }), '보통 32~64 사이를 추천해요.'),
+    field('클릭되는 지점', selectInput(HOT, HOT.some(([v]) => v === hotNow) ? hotNow : '0,0', (v) => { const [hx, hy] = v.split(',').map(Number); c.hotX = hx; c.hotY = hy; changed(); }), '그림의 어느 부분으로 클릭할지 정해요.'),
+    c.normal === EXAMPLE_CURSOR && h('p', { class: 'field-help' }, '※ 지금은 기본 예시 고양이를 쓰고 있어서, 움직이는 동안 굴러가는 그림이 0.3초 간격으로 함께 재생돼요. 직접 올린 이미지는 기본/클릭 2장으로 적용됩니다.'),
+    h('div', { class: 'row wrap' },
+      h('button', { type: 'button', class: 'btn btn-sm btn-ghost', onclick: () => { d.cursor = clone(DEFAULT_SETTINGS.cursor); changed(); repaint(); } }, '예시 커서로 되돌리기')));
 }
 
 /** 이미지 여러 장 목록 편집 (추가/삭제/기본값 복원) */
